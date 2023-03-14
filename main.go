@@ -14,6 +14,7 @@ const (
 const (
 	flagStoreDir    = "app-store-dir"
 	flagSnapshotDir = "snapshot-dir"
+	flagVersion     = "version"
 )
 
 var (
@@ -29,6 +30,12 @@ var (
 		Usage:    "The directory where the snapshot store is located",
 		Required: true,
 	}
+	versionFlag = cli.Int64Flag{
+		Name:     flagVersion,
+		Aliases:  []string{"v"},
+		Usage:    "The block height to load and sync",
+		Required: false,
+	}
 )
 
 func main() {
@@ -38,13 +45,14 @@ func main() {
 
 	app.Commands = []*cli.Command{
 		{
-			Name:    "load-snapshot",
+			Name:    "save-snapshot",
 			Aliases: []string{},
 			Usage:   "Load the app-state and save the snapshot",
-			Action:  loadSnapshot,
+			Action:  saveSnapshot,
 			Flags: []cli.Flag{
 				&storeDirFlag,
 				&snapshotDirFlag,
+				&versionFlag,
 			},
 		},
 		{
@@ -55,6 +63,7 @@ func main() {
 			Flags: []cli.Flag{
 				&storeDirFlag,
 				&snapshotDirFlag,
+				&versionFlag,
 			},
 		},
 	}

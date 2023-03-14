@@ -13,7 +13,7 @@ import (
 )
 
 func synchronize(ctx *cli.Context) error {
-	logger := log.NewLogger()
+	logger := log.NewNopLogger()
 	dirname, err := os.UserHomeDir()
 	if err != nil {
 		return err
@@ -53,11 +53,8 @@ func synchronize(ctx *cli.Context) error {
 	}
 	defer appStoreDB.Close()
 
-	keys := storetypes.NewKVStoreKeys(
-		"acc", "bank", "staking", "slashing", "gov", "upgrade", "mint", "distribution", "consensus",
-	)
 	mstore := store.NewCommitMultiStore(appStoreDB, logger, nil)
-	for _, key := range keys {
+	for _, key := range storeKeys {
 		mstore.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)
 	}
 	if err = mstore.LoadLatestVersion(); err != nil {
