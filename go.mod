@@ -4,11 +4,12 @@ go 1.20
 
 require (
 	cosmossdk.io/log v0.1.0
-	cosmossdk.io/store v0.0.0-20230314172846-c64b3e5545a1
+	cosmossdk.io/store v0.0.0-20230316162959-c3cf6270f273
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
-	github.com/cosmos/iavl v0.20.0-alpha1.0.20230307203348-a9766cff6b65
+	github.com/cosmos/iavl v0.21.0-beta.1
 	github.com/golang/snappy v0.0.4
 	github.com/hashicorp/go-multierror v1.1.1
+	github.com/stretchr/testify v1.8.2
 	github.com/urfave/cli/v2 v2.25.0
 )
 
@@ -27,10 +28,9 @@ require (
 	github.com/cometbft/cometbft v0.37.0 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/gogoproto v1.4.6 // indirect
-	github.com/cosmos/ics23/go v0.9.1-0.20221207100636-b1abd8678aab // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0 // indirect
-	github.com/emicklei/dot v1.3.1 // indirect
 	github.com/getsentry/sentry-go v0.18.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
@@ -48,6 +48,7 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/petermattis/goid v0.0.0-20221215004737-a150e88a970d // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_golang v1.14.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.42.0 // indirect
@@ -65,7 +66,8 @@ require (
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/text v0.8.0 // indirect
-	google.golang.org/genproto v0.0.0-20230202175211-008b39050e57 // indirect
+	google.golang.org/genproto v0.0.0-20230306155012-7f2fa6fef1f4 // indirect
 	google.golang.org/grpc v1.53.0 // indirect
-	google.golang.org/protobuf v1.29.0 // indirect
+	google.golang.org/protobuf v1.29.1 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

@@ -7,11 +7,12 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
+	"cosmossdk.io/store/iavl"
 	"cosmossdk.io/store/snapshots"
 	"cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/cosmos/iavl"
+	iavltree "github.com/cosmos/iavl"
 	"github.com/golang/snappy"
 	"github.com/urfave/cli/v2"
 )
@@ -30,7 +31,7 @@ func saveSnapshot(ctx *cli.Context) error {
 	snapshotDir := dirname + ctx.String(flagSnapshotDir) // "/.simapp/data/snapshots"
 	version := ctx.Int64(flagVersion)
 
-	mstore, err := loadAppStore(appStoreDir, version)
+	mstore, latestVersion, err := loadAppStore(appStoreDir, version)
 	if err != nil {
 		return err
 	}
@@ -39,13 +40,19 @@ func saveSnapshot(ctx *cli.Context) error {
 		return err
 	}
 
-	return err
+	if version < latestVersion {
+		if err = writeChangeSets(snapshotDir, mstore, version+1, latestVersion); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
-func loadAppStore(appStoreDir string, version int64) (store.CommitMultiStore, error) {
+func loadAppStore(appStoreDir string, version int64) (store.CommitMultiStore, int64, error) {
 	appStoreDB, err := dbm.NewDB("application", dbm.GoLevelDBBackend, appStoreDir)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	logger := log.NewNopLogger()
@@ -55,21 +62,17 @@ func loadAppStore(appStoreDir string, version int64) (store.CommitMultiStore, er
 	}
 
 	if err = mstore.LoadLatestVersion(); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	latestVersion := mstore.LatestVersion()
 
-	if version != 0 {
+	if version != 0 && version < latestVersion {
 		if err = mstore.LoadVersion(version); err != nil {
-			return nil, err
-		}
-
-		if err = writeChangeSets(appStoreDir, appStoreDB, version, latestVersion); err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 	}
 
-	return mstore, nil
+	return mstore, latestVersion, nil
 }
 
 func createSnapshot(snapshotDir string, mstore store.CommitMultiStore, version int64) error {
@@ -95,20 +98,16 @@ func createSnapshot(snapshotDir string, mstore store.CommitMultiStore, version i
 	return err
 }
 
-func writeChangeSets(appStoreDir string, appStoreDB dbm.DB, startVersion, endVersion int64) error {
+func writeChangeSets(snapshotDir string, mstore storetypes.CommitMultiStore, startVersion, endVersion int64) error {
 	for _, storeKey := range storeKeys {
-		snapshotFile := filepath.Join(appStoreDir, "snapshots", fmt.Sprintf("%s-%d-%d.snappy", storeKey.Name(), startVersion, endVersion))
-		fp, err := os.OpenFile(snapshotFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
+		iavlstore := mstore.GetCommitKVStore(storeKey).(*iavl.Store)
+		changesetFile := filepath.Join(snapshotDir, fmt.Sprintf("%s-%d-%d.snappy", storeKey.Name(), startVersion, endVersion))
+		fp, err := os.OpenFile(changesetFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
 		if err != nil {
 			return err
 		}
 		writer := snappy.NewBufferedWriter(fp)
-		prefix := []byte(fmt.Sprintf("s/k:%s/", storeKey.Name()))
-		tree, err := iavl.NewMutableTree(dbm.NewPrefixDB(appStoreDB, prefix), 0, true)
-		if err != nil {
-			return err
-		}
-		if err := tree.TraverseStateChanges(startVersion, endVersion, func(version int64, changeSet *iavl.ChangeSet) error {
+		if err := iavlstore.TraverseStateChanges(startVersion, endVersion, func(version int64, changeSet *iavltree.ChangeSet) error {
 			return WriteChangeSet(writer, version, *changeSet)
 		}); err != nil {
 			return err
